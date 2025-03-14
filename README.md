@@ -1,88 +1,151 @@
-<header>
+# reworkd_platform
 
-<!--
-  <<< Author notes: Course header >>>
-  Read <https://skills.github.com/quickstart> for more information about how to build courses using this template.
-  Include a 1280×640 image, course name in sentence case, and a concise description in emphasis.
-  In your repository settings: enable template repository, add your 1280×640 social image, auto delete head branches.
-  Next to "About", add description & tags; disable releases, packages, & environments.
-  Add your open source license, GitHub uses the MIT license.
--->
+This project was generated using fastapi_template.
 
-# Code with GitHub Copilot
+## Poetry
 
-_GitHub Copilot can help you code by offering autocomplete-style suggestions right in VS Code and Codespaces._
+This project uses poetry. It's a modern dependency management
+tool.
 
-</header>
+To run the project use this set of commands:
 
-<!--
-  <<< Author notes: Step 2 >>>
-  Start this step by acknowledging the previous step.
-  Define terms and link to docs.github.com.
--->
+```bash
+poetry install
+poetry run python -m reworkd_platform
+```
 
-## Step 2: Seeing AI code suggestions in a Javascript file!
+This will start the server on the configured host.
 
-_Nice work! :tada: You created a Codespace using a devcontainer file that installed Copilot!_
+You can find swagger documentation at `/api/docs`.
 
-GitHub Copilot provides suggestions for numerous languages and a wide variety of frameworks, but works especially well for Python, JavaScript, TypeScript, Ruby, Go, C# and C++. The following samples are in JavaScript, but other languages will work similarly.
+You can read more about poetry here: https://python-poetry.org/
 
-Let's try this out utilizing Javascript for Copilot.
+## Docker
 
-### :keyboard: Activity: Add a Javascript file and start writing code
+You can start the project with docker using this command:
 
-1. From inside the codespace in the VS Code explorer window, create a new file.
+```bash
+docker-compose -f deploy/docker-compose.yml --project-directory . up --build
+```
 
-> **Note**:
-> If you closed the Codespace from above, please open it back up or create a new Codespace.
+If you want to develop in docker with autoreload add `-f deploy/docker-compose.dev.yml` to your docker command.
+Like this:
 
-2. Name the file `skills.js`
-3. Verify your new file looks like:
-   ![Screen Shot 2023-03-09 at 9 21 34 AM](https://user-images.githubusercontent.com/26442605/224105906-d1beb531-b747-4c7a-85ba-a12526488422.png)
-4. In the `skills.js` file, type the following function header.
+```bash
+docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --project-directory . up --build
+```
 
-   ```
-   function calculateNumbers(var1, var2)
-   ```
+This command exposes the web application on port 8000, mounts current directory and enables autoreload.
 
-   GitHub Copilot will automatically suggest an entire function body in grayed text. Below is an example of what you'll most likely see, but the exact suggestion may vary.
-   ![Screen Shot 2023-04-27 at 10 23 06 AM](https://user-images.githubusercontent.com/26442605/234941079-b4bf3e9d-fc70-4b20-b74c-0ee753ba344e.png)
+But you have to rebuild image every time you modify `poetry.lock` or `pyproject.toml` with this command:
 
-5. Press `Tab` to accept the suggestion.
+```bash
+docker-compose -f deploy/docker-compose.yml --project-directory . build
+```
 
-### :keyboard: Activity: Push code to your repository from the codespace
+## Project structure
 
-1. Use the VS Code terminal to add the `skills.js` file to the repository:
+```bash
+$ tree "reworkd_platform"
+reworkd_platform
+├── conftest.py  # Fixtures for all tests.
+├── db  # module contains db configurations
+│   ├── dao  # Data Access Objects. Contains different classes to interact with database.
+│   └── models  # Package contains different models for ORMs.
+├── __main__.py  # Startup script. Starts uvicorn.
+├── services  # Package for different external services such as rabbit or redis etc.
+├── settings.py  # Main configuration settings for project.
+├── static  # Static content.
+├── tests  # Tests for project.
+└── web  # Package contains web server. Handlers, startup config.
+    ├── api  # Package with all handlers.
+    │   └── router.py  # Main router.
+    ├── application.py  # FastAPI application configuration.
+    └── lifetime.py  # Contains actions to perform on startup and shutdown.
+```
 
-   ```
-   git add skills.js
-   ```
+## Configuration
 
-2. Next from the VS Code terminal stage and commit the changes to the repository:
+This application can be configured with environment variables.
 
-   ```
-   git commit -m "Copilot first commit"
-   ```
+You can create `.env` file in the root directory and place all
+environment variables here.
 
-3. Finally from the VS Code terminal push to code to the repository:
+All environment variables should start with "REWORKD_PLATFORM_" prefix.
 
-   ```
-   git push
-   ```
+For example if you see in your "reworkd_platform/settings.py" a variable named like
+`random_parameter`, you should provide the "REWORKD_PLATFORM_RANDOM_PARAMETER"
+variable to configure the value. This behaviour can be changed by overriding `env_prefix` property
+in `reworkd_platform.settings.Settings.Config`.
 
-**Wait about 60 seconds then refresh your repository landing page for the next step.**
+An example of .env file:
 
-<footer>
+```bash
+REWORKD_PLATFORM_RELOAD="True"
+REWORKD_PLATFORM_PORT="8000"
+REWORKD_PLATFORM_ENVIRONMENT="development"
+```
 
-<!--
-  <<< Author notes: Footer >>>
-  Add a link to get support, GitHub status page, code of conduct, license link.
--->
+You can read more about BaseSettings class here: https://pydantic-docs.helpmanual.io/usage/settings/
 
----
+## Pre-commit
 
-Get help: [Post in our discussion board](https://github.com/orgs/skills/discussions/categories/code-with-copilot) &bull; [Review the GitHub status page](https://www.githubstatus.com/)
+To install pre-commit simply run inside the shell:
 
-&copy; 2023 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
+```bash
+pre-commit install
+```
 
-</footer>
+pre-commit is very useful to check your code before publishing it.
+It's configured using .pre-commit-config.yaml file.
+
+By default it runs:
+
+* black (formats your code);
+* mypy (validates types);
+* isort (sorts imports in all files);
+* flake8 (spots possibe bugs);
+
+You can read more about pre-commit here: https://pre-commit.com/
+
+## Running tests
+
+If you want to run it in docker, simply run:
+
+```bash
+docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --project-directory . run --build --rm api pytest -vv .
+docker-compose -f deploy/docker-compose.yml -f deploy/docker-compose.dev.yml --project-directory . down
+```
+
+For running tests on your local machine.
+
+1. you need to start a database.
+
+I prefer doing it with docker:
+
+```
+docker run -p "3306:3306" -e "MYSQL_PASSWORD=reworkd_platform" -e "MYSQL_USER=reworkd_platform" -e "MYSQL_DATABASE=reworkd_platform" -e ALLOW_EMPTY_PASSWORD=yes bitnami/mysql:8.0.30
+```
+
+2. Run the pytest.
+
+```bash
+pytest -vv .
+```
+
+## Running linters
+
+```bash
+# Flake
+poetry run black .
+poetry run autoflake --in-place --remove-duplicate-keys --remove-all-unused-imports -r .
+poetry run flake8
+poetry run mypy .
+
+# Pytest
+poetry run pytest -vv --cov="reworkd_platform" .
+
+# Bump packages
+poetry self add poetry-plugin-up
+poetry up --latest
+```
